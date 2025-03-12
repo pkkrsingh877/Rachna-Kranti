@@ -1,16 +1,15 @@
 'use client';
 import React from 'react';
-import Header from '@/components/custom/Header';
+import Poems from '@/app/components/Poems';  
+import Stories from '@/app/components/Stories';
+import Dramas from '@/app/components/Dramas';
+
 export default function Home() {
   return (
-    <div className="flex flex-col">
-      <Header/>
-      <main>
-        {/* Content goes here */}
-      </main>
-      <footer>
-        {/* Footer content goes here */}
-      </footer>
-    </div>
+    <>
+      <Poems />
+      <Stories />
+      <Dramas />
+    </>
   );
 }
