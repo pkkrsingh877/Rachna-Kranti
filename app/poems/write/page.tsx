@@ -3,12 +3,12 @@ import React, { useState } from 'react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import Tiptap from '@/app/components/Tiptap';
 
 const formSchema = z.object({
     title: z.string().min(2, {
@@ -67,15 +67,9 @@ export default function Page() {
                     {/* Content Field */}
                     <FormField control={form.control} name="content" render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Content</FormLabel>
+                            <FormLabel>Prompt</FormLabel>
                             <FormControl>
-                                <Tiptap 
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    onBlur={field.onBlur}
-                                    name={field.name}
-                                    ref={field.ref}
-                                />
+                                <Textarea placeholder="Content" {...field} />   
                             </FormControl>
                             <FormDescription>This is the content of the poem.</FormDescription>
                             <FormMessage />
