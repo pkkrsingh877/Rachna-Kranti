@@ -3,10 +3,20 @@ import React from 'react';
 import Link from 'next/link';
 import logoLight from '@/public/logo-light.png';
 import { Menu } from 'lucide-react';
+import { signIn, signOut, useSession } from 'next-auth/react';
 
 export default function Header() {
+    const { data: session, status } = useSession();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
+    const handleSignOut = async () => {
+        await signOut();  
+    }
+
+    const handleSignIn = async () => {
+        await signIn();  
+    }
+    
     const toggleMenu = () => {
         setIsMobileMenuOpen(!isMobileMenuOpen);
     };
@@ -21,12 +31,25 @@ export default function Header() {
                 </div>
                 {/* Hamburger Icon */}
                 <Menu className='block md:hidden' onClick={toggleMenu} />
+
+                {/* Desktop/Tablet Menu */}
                 {/* Desktop/Tablet Menu */}
                 <div className="hidden md:flex items-center space-x-4">
                     <Link href="/" className="text-gray-700 hover:text-blue-500">Home</Link>
                     <Link href="/poems" className="text-gray-700 hover:text-blue-500">Poems</Link>
                     <Link href="/stories" className="text-gray-700 hover:text-blue-500">Stories</Link>
                     <Link href="/dramas" className="text-gray-700 hover:text-blue-500">Dramas</Link>
+                    {session ? (
+                        <>
+                            <button onClick={handleSignOut} className="bg-white-900 text-black border-2  px-4 py-2 rounded-lg">
+                                Sign Out</button>
+                        </>
+                    ) : (
+                        <>
+                            <button onClick={handleSignIn} className="bg-white-900 text-black border-2  px-4 py-2 rounded-lg">
+                                Sign In</button>
+                        </>
+                    )}
                 </div>
             </nav>
             {/* Sidebar */}
@@ -37,6 +60,17 @@ export default function Header() {
                 <Link href="/poems" className="block py-2 px-4 text-gray-700">Poems</Link>
                 <Link href="/stories" className="block py-2 px-4 text-gray-700">Stories</Link>
                 <Link href="/dramas" className="block py-2 px-4 text-gray-700">Dramas</Link>
+                {session ?  (
+                    <>
+                        <button onClick={handleSignOut} className="bg-white-900 text-black border-2  px-4 py-2 rounded-lg">
+                            Sign Out</button>
+                    </>
+                ) : (
+                    <>
+                        <button onClick={handleSignIn} className="bg-white-900 text-black border-2  px-4 py-2 rounded-lg">
+                            Sign In</button>
+                    </>
+                )}
             </aside>
         </header>
 
