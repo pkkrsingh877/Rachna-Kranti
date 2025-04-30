@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Header from "./components/Header";
+import Header from "../components/Header";
+import { getServerSession } from "next-auth";
+import SessionProvider from "../components/SessionProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,16 +20,18 @@ export const metadata: Metadata = {
   description: "Use AI to write Stories, Proses, Poems, Novels, Jokes, etc.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getServerSession();
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <SessionProvider session={session}>
         <div className="flex flex-col">
           <Header />
           <main>
@@ -38,6 +42,7 @@ export default function RootLayout({
             {/* Footer content goes here */}
           </footer>
         </div>
+        </SessionProvider>
       </body>
     </html>
   );

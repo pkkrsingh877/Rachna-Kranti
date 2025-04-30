@@ -1,8 +1,8 @@
 'use client';
 import React from 'react';
-import Poems from '@/app/components/Poems';  
-import Stories from '@/app/components/Stories';
-import Dramas from '@/app/components/Dramas';
+import Poems from '../components/Poems';  
+import Stories from '../components/Stories';
+import Dramas from '../components/Dramas';
 
 export default function Home() {
   return (

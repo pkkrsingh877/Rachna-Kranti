@@ -127,3 +127,10 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Allows textarea to grow with content being added without user having
+to do it manually */
+textarea {
+  min-height: 10rem;
+  field-sizing: content;
+}
