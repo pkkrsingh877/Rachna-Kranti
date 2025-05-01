@@ -38,7 +38,7 @@ export default function Header() {
                     <Link href="/" className="text-gray-700 hover:text-blue-500">Home</Link>
                     <Link href="/poems" className="text-gray-700 hover:text-blue-500">Poems</Link>
                     <Link href="/stories" className="text-gray-700 hover:text-blue-500">Stories</Link>
-                    <Link href="/dramas" className="text-gray-700 hover:text-blue-500">Dramas</Link>
+                    <Link href="/profile" className="text-gray-700 hover:text-blue-500">Profile</Link>
                     {session ? (
                         <>
                             <button onClick={handleSignOut} className="bg-white-900 text-black border-2  px-4 py-2 rounded-lg">
@@ -59,7 +59,7 @@ export default function Header() {
                 <Link href="/" className="block py-2 px-4 text-gray-700">Home</Link>
                 <Link href="/poems" className="block py-2 px-4 text-gray-700">Poems</Link>
                 <Link href="/stories" className="block py-2 px-4 text-gray-700">Stories</Link>
-                <Link href="/dramas" className="block py-2 px-4 text-gray-700">Dramas</Link>
+                <Link href="/profile" className="block py-2 px-4 text-gray-700">Profile</Link>
                 {session ?  (
                     <>
                         <button onClick={handleSignOut} className="bg-white-900 text-black border-2  px-4 py-2 rounded-lg">
