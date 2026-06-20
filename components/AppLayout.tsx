@@ -13,6 +13,7 @@ import {
   X,
   LogOut,
   Sparkles,
+  Drama,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/Avatar';
@@ -22,6 +23,7 @@ const navItems = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/content', label: 'Contents', icon: BookOpen },
   { href: '/books', label: 'Books', icon: BookOpen },
+  { href: '/dramas', label: 'Dramas', icon: Drama },
   { href: '/content/write', label: 'Write', icon: PenSquare },
   { href: '/content/generate', label: 'Generate', icon: Sparkles },
   { href: '/profile', label: 'Profile', icon: User },

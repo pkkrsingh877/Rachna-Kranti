@@ -59,6 +59,43 @@ export interface ChapterItem {
   updatedAt: string;
 }
 
+export interface DramaItem {
+  _id: string;
+  title: string;
+  slug: string;
+  authorId: { _id: string; name: string; email: string; image?: string };
+  type: string;
+  description?: string;
+  coverImage?: string;
+  status: 'draft' | 'review' | 'scheduled' | 'published' | 'archived';
+  actsCount: number;
+  scenesCount: number;
+  publishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ActItem {
+  _id: string;
+  dramaId: string;
+  title: string;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SceneItem {
+  _id: string;
+  dramaId: string;
+  actId: string;
+  title: string;
+  order: number;
+  content: { speaker: string; text: string }[];
+  wordCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ProfileData {
   _id: string;
   name: string;

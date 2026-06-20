@@ -13,6 +13,13 @@ export const queryKeys = {
     detail: (id: string) => ['books', 'detail', id] as const,
     chapters: (bookId: string) => ['books', 'chapters', bookId] as const,
   },
+  dramas: {
+    all: ['dramas'] as const,
+    list: (filters?: Record<string, unknown>) => ['dramas', 'list', filters] as const,
+    detail: (id: string) => ['dramas', 'detail', id] as const,
+    acts: (dramaId: string) => ['dramas', 'acts', dramaId] as const,
+    scenes: (actId: string) => ['dramas', 'scenes', actId] as const,
+  },
   comments: {
     all: ['comments'] as const,
     list: (contentId: string) => ['comments', 'list', contentId] as const,
