@@ -5,7 +5,8 @@ import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Toaster } from "@/components/ui/sonner";
-import { useContent } from '@/hooks/use-content';
+import { toast } from "sonner";
+import { useContent, useDeleteContent } from '@/hooks/use-content';
 import { Avatar } from '@/components/Avatar';
 import LikeButton from '@/components/LikeButton';
 import FollowButton from '@/components/FollowButton';
@@ -18,6 +19,22 @@ export default function Page() {
     const contentId = params.id as string;
 
     const query = useContent(contentId);
+    const deleteContent = useDeleteContent();
+
+    const isAuthor = session?.user?.email === query.data?.authorId?.email;
+
+    function handleDelete() {
+        if (!confirm('Are you sure you want to delete this content? This action cannot be undone.')) return;
+        deleteContent.mutate(contentId, {
+            onSuccess: () => {
+                toast.success('Content deleted');
+                router.push('/content');
+            },
+            onError: (error: unknown) => {
+                toast.error((error as Error).message || 'Failed to delete content');
+            },
+        });
+    }
 
     if (query.isLoading) {
       return (
@@ -119,9 +136,21 @@ export default function Page() {
 
                 <CommentSection contentId={contentId} />
 
-                <Button className="mt-8" variant="outline" onClick={() => router.push('/content')}>
-                    ← Back to All Contents
-                </Button>
+                <div className="flex items-center justify-between mt-8">
+                    <Button variant="outline" onClick={() => router.push('/content')}>
+                        ← Back to All Contents
+                    </Button>
+                    {isAuthor && (
+                        <div className="flex gap-2">
+                            <Button variant="outline" onClick={() => router.push(`/content/write?id=${contentId}`)}>
+                                Edit
+                            </Button>
+                            <Button variant="destructive" onClick={handleDelete} disabled={deleteContent.isLoading}>
+                                {deleteContent.isLoading ? 'Deleting…' : 'Delete'}
+                            </Button>
+                        </div>
+                    )}
+                </div>
             </div>
             <Toaster />
         </div>

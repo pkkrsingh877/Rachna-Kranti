@@ -71,6 +71,47 @@ export function useCreateContent() {
   });
 }
 
+export function useUpdateContent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<{ title: string; content: any; tags: string[]; description: string; excerpt: string; coverImage: string; status: string }> }) => {
+      const res = await fetch(`/api/content/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to update content');
+      }
+      return res.json();
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.content.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.content.all });
+    },
+  });
+}
+
+export function useDeleteContent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/content/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to delete content');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.content.all });
+    },
+  });
+}
+
 export function useGenerateContent() {
   const queryClient = useQueryClient();
 

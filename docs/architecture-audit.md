@@ -106,13 +106,12 @@ Based on the audit, here's what needs to be built:
 - [x] Set up an email service using Resend API (free on Vercel, 100 emails/day)
 - [x] Env vars needed: `RESEND_API_KEY`, `EMAIL_FROM`
 
-### 6.3 Content CRUD — Add Update & Delete
+### 6.3 Content CRUD — Add Update & Delete ✅
 
-- [ ] Add `PUT /api/content/:id` — update title, content, tags, description, coverImage, status
-- [ ] Add `DELETE /api/content/:id` — delete content and cascade clean up (comments, likes, notifications)
-- [ ] Add `PATCH /api/content/:id/status` — transition between draft/published/archived
-- [ ] Wire the `/content/write` page for editing existing content (pass `id` param, pre-fill form, update vs create)
-- [ ] Add edit/delete buttons on the content detail page (`/content/[id]`)
+- [x] Add `PATCH /api/content/:id` — update title, content, tags, description, coverImage, status (partial)
+- [x] Add `DELETE /api/content/:id` — delete content and cascade clean up (comments, likes, notifications)
+- [x] Wire the `/content/write` page for editing existing content (`?id=` param, pre-fill form, PATCH vs POST)
+- [x] Add edit/delete buttons on the content detail page (`/content/[id]`) — shown only to author
 
 ### 6.4 Content Model — Add Drama Support
 

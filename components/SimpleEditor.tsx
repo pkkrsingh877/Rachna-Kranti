@@ -1,5 +1,5 @@
 import * as React from "react"
-import { EditorContent, EditorContext, useEditor } from "@tiptap/react"
+import { EditorContent, EditorContext, useEditor, type Editor } from "@tiptap/react"
 
 // --- Tiptap Core Extensions ---
 import { StarterKit } from "@tiptap/starter-kit"
@@ -174,7 +174,7 @@ const MobileToolbarContent = ({
   </>
 )
 
-export function SimpleEditor({ onEditorReady }: { onEditorReady?: (editor: any) => void }) {
+export function SimpleEditor({ onEditorReady, defaultContent }: { onEditorReady?: (editor: Editor) => void; defaultContent?: Record<string, unknown> }) {
   const isMobile = useMobile()
   const windowSize = useWindowSize()
   const [mobileView, setMobileView] = React.useState<
@@ -219,7 +219,7 @@ export function SimpleEditor({ onEditorReady }: { onEditorReady?: (editor: any) 
       TrailingNode,
       Link.configure({ openOnClick: false }),
     ],
-    content: content,
+    content: defaultContent || content,
   })
 
   React.useEffect(() => {
