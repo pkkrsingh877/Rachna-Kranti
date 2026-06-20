@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { useBook, useDeleteBook, usePublishBook } from '@/hooks/use-books';
 import { Avatar } from '@/components/Avatar';
+import RenderTiptap from '@/components/RenderTiptap';
 import type { ChapterItem } from '@/lib/api-types';
 
 export default function BookDetailPage() {
@@ -139,24 +140,8 @@ export default function BookDetailPage() {
               <div className="border rounded-lg mb-6 max-h-[70vh] overflow-y-auto p-6">
                 {chapter ? (
                   <div className="prose-content">
-                    {chapter.content?.content ? (
-                      Array.isArray(chapter.content.content) ? (
-                        chapter.content.content.map((node: any, i: number) => {
-                          if (node.type === 'paragraph') {
-                            return <p key={i} className="mb-4 leading-relaxed">{node.text || node.content}</p>;
-                          }
-                          if (node.type === 'heading') {
-                            return React.createElement(
-                              `h${node.attrs?.level || 2}`,
-                              { key: i, className: 'font-semibold mt-6 mb-3' },
-                              node.text || node.content
-                            );
-                          }
-                          return null;
-                        })
-                      ) : (
-                        <p className="leading-relaxed">{typeof chapter.content === 'string' ? chapter.content : '...'}</p>
-                      )
+                    {chapter.content ? (
+                      <RenderTiptap doc={chapter.content as Record<string, unknown>} />
                     ) : (
                       <p className="text-muted-foreground italic">Empty chapter</p>
                     )}

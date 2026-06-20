@@ -15,7 +15,7 @@ export default function LikeButton({ contentId }: { contentId: string }) {
   return (
     <button
       onClick={() => {
-        if (!toggleLike.isPending) {
+        if (!toggleLike.isLoading) {
           toggleLike.mutate(liked);
         }
       }}

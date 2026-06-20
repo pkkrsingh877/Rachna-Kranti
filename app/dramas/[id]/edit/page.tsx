@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Plus, Trash2, ChevronLeft, ChevronRight, Drama, Save, GripVertical } from 'lucide-react';
+import { Plus, Trash2, ChevronLeft, ChevronRight, Drama, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Toaster } from "@/components/ui/sonner";
@@ -12,10 +12,8 @@ import {
   useDrama,
   useUpdateDrama,
   useCreateAct,
-  useUpdateAct,
   useDeleteAct,
   useReorderActs,
-  useActDetail,
   useCreateScene,
   useUpdateScene,
   useDeleteScene,
@@ -32,7 +30,6 @@ export default function DramaEditorPage() {
   const { data, isLoading } = useDrama(dramaId);
   const updateDrama = useUpdateDrama();
   const createAct = useCreateAct();
-  const updateAct = useUpdateAct();
   const deleteAct = useDeleteAct();
   const reorderActs = useReorderActs();
   const createScene = useCreateScene();
@@ -48,7 +45,6 @@ export default function DramaEditorPage() {
   const [showMetadata, setShowMetadata] = useState(false);
   const [sceneTitle, setSceneTitle] = useState('');
   const [dialogueLines, setDialogueLines] = useState<{ speaker: string; text: string }[]>([]);
-  const [isDirty, setIsDirty] = useState(false);
 
   const sortedActs = [...(data?.acts || [])].sort((a: ActItem, b: ActItem) => a.order - b.order);
   const currentAct = sortedActs.find((a) => a._id === selectedActId) || sortedActs[0];
@@ -73,7 +69,6 @@ export default function DramaEditorPage() {
       if (scene) {
         setSceneTitle(scene.title);
         setDialogueLines(scene.content.map((l) => ({ speaker: l.speaker, text: l.text })));
-        setIsDirty(false);
       }
     } else if (selectedSceneId === null) {
       setSceneTitle('');
@@ -151,7 +146,6 @@ export default function DramaEditorPage() {
       { dramaId, actId: selectedActId!, sceneId: selectedSceneId, data: { title: sceneTitle, content: dialogueLines } },
       {
         onSuccess: () => {
-          setIsDirty(false);
           toast.success('Scene saved');
         },
         onError: (error: unknown) => {
@@ -217,19 +211,16 @@ export default function DramaEditorPage() {
 
   function addDialogueLine() {
     setDialogueLines([...dialogueLines, { speaker: '', text: '' }]);
-    setIsDirty(true);
   }
 
   function updateDialogueLine(index: number, field: 'speaker' | 'text', value: string) {
     const updated = [...dialogueLines];
     updated[index] = { ...updated[index], [field]: value };
     setDialogueLines(updated);
-    setIsDirty(true);
   }
 
   function removeDialogueLine(index: number) {
     setDialogueLines(dialogueLines.filter((_, i) => i !== index));
-    setIsDirty(true);
   }
 
   const handleMoveAct = (index: number, direction: -1 | 1) => {

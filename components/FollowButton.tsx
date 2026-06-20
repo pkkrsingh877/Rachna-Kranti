@@ -17,7 +17,7 @@ export default function FollowButton({ authorId }: { authorId: string }) {
   return (
     <button
       onClick={() => {
-        if (!toggleFollow.isPending) {
+        if (!toggleFollow.isLoading) {
           toggleFollow.mutate(following);
         }
       }}

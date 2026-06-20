@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { useDrama, useDeleteDrama, usePublishDrama } from '@/hooks/use-dramas';
-import { Avatar } from '@/components/Avatar';
 import type { ActItem, SceneItem } from '@/lib/api-types';
 
 export default function DramaDetailPage() {

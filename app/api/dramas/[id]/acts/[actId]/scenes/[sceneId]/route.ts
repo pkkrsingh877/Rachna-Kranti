@@ -4,7 +4,6 @@ import { authOptions } from '@/lib/auth';
 import { connectToDB } from '@/lib/db';
 import User from '@/models/User';
 import Drama from '@/models/Drama';
-import Act from '@/models/Act';
 import Scene from '@/models/Scene';
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string; actId: string; sceneId: string }> }) {

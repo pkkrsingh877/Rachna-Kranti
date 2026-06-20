@@ -104,7 +104,7 @@ function CommentForm({
       <Button
         type="submit"
         size="sm"
-        disabled={!text.trim() || createComment.isPending}
+        disabled={!text.trim() || createComment.isLoading}
       >
         {parentId ? 'Reply' : 'Comment'}
       </Button>

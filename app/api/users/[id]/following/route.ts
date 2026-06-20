@@ -22,7 +22,7 @@ export async function GET(
       .sort({ createdAt: -1 })
       .lean();
 
-    const users = follows.map((f: { followingId: unknown }) => f.followingId);
+    const users = follows.map((f) => (f as Record<string, unknown>).followingId);
     return NextResponse.json(users);
   } catch (error) {
     console.error('GET following error:', error);

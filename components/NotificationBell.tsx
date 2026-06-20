@@ -56,7 +56,7 @@ export default function NotificationBell() {
   const handleOpen = () => {
     setOpen(!open);
     if (!open && unreadCount && unreadCount > 0) {
-      markAsRead.mutate();
+      markAsRead.mutate(undefined);
     }
   };
 

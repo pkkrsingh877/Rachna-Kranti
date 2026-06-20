@@ -11,7 +11,7 @@ export interface ContentItem {
   slug: string;
   authorId: { _id: string; name: string; email: string; image?: string };
   contentType: string;
-  content: any;
+  content: Record<string, unknown>;
   tags: string[];
   description?: string;
   excerpt?: string;
@@ -53,7 +53,7 @@ export interface ChapterItem {
   bookId: string;
   title: string;
   order: number;
-  content: any;
+  content: Record<string, unknown>;
   wordCount: number;
   createdAt: string;
   updatedAt: string;

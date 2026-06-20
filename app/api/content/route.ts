@@ -30,7 +30,7 @@ export async function GET(request: Request) {
         const author = searchParams.get('author');
         const search = searchParams.get('search');
 
-        const filter: Record<string, any> = { status };
+        const filter: Record<string, unknown> = { status };
         if (type) filter.contentType = type.charAt(0).toUpperCase() + type.slice(1);
         if (author) filter.authorId = author;
         if (search) filter.title = { $regex: search, $options: 'i' };
@@ -72,7 +72,7 @@ export async function GET(request: Request) {
             next,
             results: contents,
         }, { status: 200 });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Error fetching data:", error);
         return NextResponse.json({ error: "Failed to fetch data." }, { status: 500 });
     }
@@ -111,10 +111,10 @@ export async function POST(request: Request) {
         await content.save();
 
         return NextResponse.json({ content }, { status: 201 });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Error saving content:", error);
-        if (error.name === 'ZodError') {
-            return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 });
+        if (error instanceof Error && 'name' in error && (error as Error & { name: string }).name === 'ZodError') {
+            return NextResponse.json({ error: 'Validation failed', details: (error as Error & { errors: unknown }).errors }, { status: 400 });
         }
         return NextResponse.json({ error: "Failed to save content." }, { status: 500 });
     }

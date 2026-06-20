@@ -4,7 +4,8 @@ import { authOptions } from '@/lib/auth';
 import { connectToDB } from '@/lib/db';
 import User from '@/models/User';
 
-export async function GET(req: Request) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_request: Request) {
   try {
     const session = await getServerSession(authOptions);
 

@@ -11,6 +11,7 @@ import { Avatar } from '@/components/Avatar';
 import LikeButton from '@/components/LikeButton';
 import FollowButton from '@/components/FollowButton';
 import CommentSection from '@/components/CommentSection';
+import RenderTiptap from '@/components/RenderTiptap';
 
 export default function Page() {
     const router = useRouter();
@@ -88,43 +89,7 @@ export default function Page() {
                 )}
 
                 <div className="prose-content">
-                  {Array.isArray(content.content) && content.content.map((stanza: any, idx: number) => (
-                    <div key={idx}>
-                      {stanza.type === 'stanza' && stanza.lines && (
-                        <div className="mb-6">
-                          {stanza.lines.map((line: string, i: number) => (
-                            <p key={i} className="leading-relaxed">{line}</p>
-                          ))}
-                        </div>
-                      )}
-                      {stanza.type === 'paragraph' && stanza.text && (
-                        <p className="mb-4 leading-relaxed">{stanza.text}</p>
-                      )}
-                      {stanza.type === 'act' && (
-                        <div className="mb-8">
-                          <h2 className="text-2xl font-semibold mb-4">{stanza.title}</h2>
-                          {stanza.scenes?.map((scene: any, si: number) => (
-                            <div key={si} className="mb-6">
-                              <h3 className="text-xl font-medium mb-3">{scene.title}</h3>
-                              {scene.content?.map((item: any, ci: number) => (
-                                <div key={ci}>
-                                  {item.type === 'paragraph' && <p className="mb-3">{item.text}</p>}
-                                  {item.type === 'character' && (
-                                    <div className="mb-4 ml-4">
-                                      <p className="font-semibold text-primary">{item.name}</p>
-                                      {item.dialogue?.map((d: any, di: number) => (
-                                        <p key={di} className="ml-4 mb-1">{d.text}</p>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                  <RenderTiptap doc={content.content as Record<string, unknown>} />
                 </div>
 
                 <div className="flex items-center gap-3 mt-6">
