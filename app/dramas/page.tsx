@@ -6,6 +6,7 @@ import { Plus, Drama } from 'lucide-react';
 import { useDramas } from '@/hooks/use-dramas';
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/ui/button';
+import PageContainer from '@/components/layout/PageContainer';
 
 export default function DramasPage() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function DramasPage() {
   const dramas = data?.results || [];
 
   return (
-    <div className="container mx-auto p-4">
+    <PageContainer className="py-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Dramas</h1>
         <Link href="/dramas/create">
@@ -72,6 +73,6 @@ export default function DramasPage() {
           ))
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }

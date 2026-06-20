@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Heart, MessageSquare } from 'lucide-react';
 import { useContents } from '@/hooks/use-content';
 import { Avatar } from '@/components/Avatar';
+import PageContainer from '@/components/layout/PageContainer';
 
 export default function Home() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function Home() {
     title: string;
     contents?: { _id: string; title: string; authorId?: { name: string; image?: string }; excerpt?: string; likesCount: number; commentsCount: number }[];
   }) => (
-    <div className="container mx-auto p-4">
+    <PageContainer>
       <h1 className="text-2xl font-bold mb-4">Featured {title}</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {!contents || contents.length === 0 ? (
@@ -54,7 +55,7 @@ export default function Home() {
           ))
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 
   return (

@@ -4,6 +4,7 @@ import './globals.css';
 import { getServerSession } from 'next-auth';
 import SessionProvider from '../components/SessionProvider';
 import QueryClientProviderWrapper from '../components/QueryClientProviderWrapper';
+import ThemeProviderWrapper from '@/components/ThemeProviderWrapper';
 import AppLayout from '@/components/AppLayout';
 
 const geistSans = Geist({
@@ -31,11 +32,13 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <SessionProvider session={session}>
-          <QueryClientProviderWrapper>
-            <AppLayout>{children}</AppLayout>
-          </QueryClientProviderWrapper>
-        </SessionProvider>
+        <ThemeProviderWrapper>
+          <SessionProvider session={session}>
+            <QueryClientProviderWrapper>
+              <AppLayout>{children}</AppLayout>
+            </QueryClientProviderWrapper>
+          </SessionProvider>
+        </ThemeProviderWrapper>
       </body>
     </html>
   );

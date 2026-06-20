@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Toaster } from "@/components/ui/sonner";
 import { useRouter } from 'next/navigation';
 import { useContents } from '@/hooks/use-content';
+import PageContainer from '@/components/layout/PageContainer';
 
 
 export default function Page() {
@@ -39,7 +40,7 @@ export default function Page() {
     const { results: contents, count, previous, next } = query.data!;
 
     return (
-        <div className="flex flex-col items-center mt-4">
+        <PageContainer className="flex flex-col items-center">
             <h1 className="text-3xl font-bold">All Contents</h1>
 
             <div className="flex flex-wrap gap-3 mt-6 w-full max-w-2xl px-4">
@@ -124,6 +125,6 @@ export default function Page() {
             </div>
 
             <Toaster />
-        </div>
+        </PageContainer>
     )
 }

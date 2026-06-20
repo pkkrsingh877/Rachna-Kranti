@@ -6,6 +6,7 @@ import { BookOpen, Plus } from 'lucide-react';
 import { useBooks } from '@/hooks/use-books';
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/ui/button';
+import PageContainer from '@/components/layout/PageContainer';
 
 export default function BooksPage() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function BooksPage() {
   const books = data?.results || [];
 
   return (
-    <div className="container mx-auto p-4">
+    <PageContainer className="py-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Books</h1>
         <Link href="/books/create">
@@ -77,6 +78,6 @@ export default function BooksPage() {
           ))
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }

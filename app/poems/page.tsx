@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Heart, MessageSquare } from 'lucide-react';
 import { useContents } from '@/hooks/use-content';
 import { Avatar } from '@/components/Avatar';
+import PageContainer from '@/components/layout/PageContainer';
 
 export default function Poems() {
   const router = useRouter();
@@ -20,8 +21,8 @@ export default function Poems() {
   const poems = data?.results || [];
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Poems</h1>
+    <PageContainer>
+      <h1 className="text-2xl font-bold mb-6">Poems</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {poems.length === 0 ? (
           <p className="text-muted-foreground col-span-full">No poems yet.</p>
@@ -54,6 +55,6 @@ export default function Poems() {
           ))
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }
