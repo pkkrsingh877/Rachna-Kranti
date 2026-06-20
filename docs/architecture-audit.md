@@ -48,40 +48,70 @@ Edit/delete buttons appear on `/content/[id]` for the author. The `/content/writ
 
 ## 4. Content model — is it structured for dramas, novels, chapters, books? ✅
 
-**Partially — gaps remain.**
+**Partially — Poetry, Stories, and Prose are well-served. Books and Dramas need dedicated modules.**
 
-### What the model supports:
-- **Content type:** discriminator field (`Poem`, `Prose`, `Story` — but NOT `Drama` in the TS interface, even though Zod schemas and API validation support it)
-- **Content field:** `Schema.Types.Mixed` — stores arbitrary JSON. The Zod schemas define expected shapes:
-  - **Poem:** `[{ type: "stanza", lines: string[] }]`
-  - **Story/Prose:** `[{ type: "paragraph", text: string }]`
-  - **Drama:** `[{ type: "act", title, scenes: [...] }]`
-- **Status:** `draft`, `published`, `archived`
-- **Content-type–specific validation:** ✅ Applied via `superRefine` in `contentSchema`
-- **Publish on behalf:** ✅ Available via `POST /api/admin/publish-as` (admin role)
+### Current approach: Generic Content model
+The existing `Content` discriminator model (Poem, Prose, Story) works well for short-form writing. However, forcing Books/Novels and Dramas into this single model creates problems:
+- No chapter/scene separation — a novel is one giant `content` blob
+- No per-chapter word counts or reading progress
+- No act/scene/character structure for dramas
+- Generic editor doesn't know about chapters
 
-### What's still missing:
-- **No `Drama` discriminator model** — the model interface doesn't include `'Drama'`, and no discriminator model is defined for it. Creating content with `contentType: 'drama'` is permitted at the API/Zod level but Mongoose won't enforce a discriminator.
-- **No `Chapter` / `Book` model** — novels and books are stored as generic `content: Mixed`. No dedicated model for chapters, books, or collections.
+### Proposed architecture (from `docs/more.md`):
+Keep Poems, Stories, and Prose in the existing Content system. Build dedicated **Book** and **Drama** modules with their own models, APIs, editors, and readers.
+
+```
+Current:                     Proposed:
+Content                      Poetry Module
+ ├─ Poem                     Story Module
+ ├─ Story                    Book Module     ← NEW
+ ├─ Prose                    Drama Module    ← NEW
+ └─ Drama  (partial)
+```
+
+**Shared infrastructure** (reused across all modules):
+- Auth & permissions
+- Comments, likes, follows, notifications
+- Rich text editor (Tiptap component)
+- Tags, cover images, search
+- Publishing engine
+- Export engine (PDF, EPUB)
+
+**Dedicated per module** (different UX):
+- Editor layout (chapter sidebar vs act/scene tree vs simple text area)
+- Reading experience (table of contents, scene navigation, progress)
+- CRUD APIs and pages
+
+### Feasibility check — ✅ Current architecture supports this:
+- Modular Mongoose models — just add new model files (same pattern as `models/User.ts`)
+- Folder-based API routes — add `app/api/books/*`, `app/api/dramas/*`
+- Page directories — add `app/books/*`, `app/dramas/*`
+- Reusable components already exist (SimpleEditor, LikeButton, CommentSection, etc.)
+- No breaking changes — existing Content model stays untouched
+- All additive — no refactoring needed
 
 ---
 
-## 5. Tiptap editor — can it handle chapters/novels/books?
+## 5. Tiptap editor — can it handle chapters/novels/books? ✅
 
-**It's a general rich text editor.** The current editor supports:
+**The editor component itself is the shared infrastructure. The UX around it differs per module.**
+
+### What the existing editor supports (shared):
 - Headings (H1-H4), bold, italic, underline, strikethrough, code
 - Bullet lists, ordered lists, task lists
 - Blockquotes, code blocks, horizontal rules
 - Images, links, highlights (multicolor)
 - Superscript, subscript
 
-**It does NOT have:**
-- Chapter navigation / outline panel
-- Act/scene/character structured editing
-- Book metadata (ISBN, publisher, copyright)
-- Multi-document book management
+### How it maps to the new architecture:
 
-The editor stores a single Tiptap JSON document in the `content` field. A "novel" would be one giant document. There's no mechanism to split a book into chapters within the editor.
+| Module | Editor UX | Content Source |
+|---|---|---|
+| Poems / Stories / Prose | Simple full-page editor (current) | Single `content` field |
+| Books | Chapter sidebar + editor (one chapter at a time) | `Chapter.content` per chapter |
+| Dramas | Act/Scene tree + editor (one scene at a time) | `Scene.content` per scene |
+
+The Tiptap editor component (`SimpleEditor.tsx`) is reused everywhere — only the surrounding UI (navigation, metadata, structure) changes per module. This is exactly the "share infrastructure, not workflows" principle.
 
 ---
 
@@ -122,15 +152,59 @@ Based on the audit, here's what needs to be built:
 - [ ] Add `Drama` discriminator model
 - [x] Content-type–specific Zod validation in API route (`poemContentSchema`, `dramaContentSchema`, etc.) ✅ done in 6.8
 
-### 6.5 Editor — Chapter/Novel/Book Writing Interface *(Future / Nice-to-have)*
+### 6.5 Book Module *(New — dedicated module)*
 
-- [ ] Create a "Book" content type with a `chapters: [{ title, content }]` structure
-- [ ] Add a chapter navigation panel to the editor (sidebar with chapter list)
-- [ ] Allow reordering, adding, deleting chapters
-- [ ] Add book metadata fields (cover image, ISBN, publisher info, copyright notice)
-- [ ] Create a `/books/write/[id]` page for book editing
+- [ ] Create `Book` model (`title`, `slug`, `authorId`, `type: Novel | Novella | Biography | Autobiography | Memoir | Anthology | Research | General`, `subtitle?`, `description`, `coverImage`, `tags`, `status`, `chapterCount`, bio-specific metadata: `subjectPerson?`, `birthDate?`, `deathDate?`, `timelineEnabled?`)
+- [ ] Create `Chapter` model (`bookId`, `title`, `order`, `content`, `wordCount`)
+- [ ] Create API routes: `POST /api/books`, `GET /api/books`, `GET /api/books/:id`, `PATCH /api/books/:id`, `DELETE /api/books/:id`
+- [ ] Create chapter API routes: `POST /api/books/:id/chapters`, `PATCH /api/books/:id/chapters/:chapterId`, `DELETE /api/books/:id/chapters/:chapterId`, `PATCH /api/books/:id/chapters/reorder`
+- [ ] Build Book Editor page (`/books/create`, `/books/[id]/edit`) with chapter sidebar, one-chapter-at-a-time editing
+- [ ] Add chapter CRUD: create, delete, duplicate, reorder (drag-and-drop)
+- [ ] Book-level publish workflow — chapters are never published individually; publishing the book creates a frozen version
+- [ ] Versioning system: maintain a draft version separate from the published version (like Medium/Notion/Git — edit creates a draft, publish creates a new version)
+- [ ] Book metadata form: title, subtitle, description, cover, type selector; for biographies add subjectPerson, birthDate, deathDate, timelineEnabled
+- [ ] Build Book Reader page (`/books/[slug]`) with table of contents, chapter navigation, reading progress
+- [ ] Add comments, likes, and sharing per book
 
-### 6.6 Resilience — Graceful Degradation ✅
+### 6.6 Drama Module *(New — dedicated module)*
+
+- [ ] Create `Drama` model (`title`, `slug`, `authorId`, `type: Drama | Play | Screenplay | Stage Script | TV Script`, `description`, `coverImage`, `status`, `actsCount`, `scenesCount`)
+- [ ] Create `Act` model (`dramaId`, `title`, `order`)
+- [ ] Create `Scene` model (`dramaId`, `actId`, `title`, `order`, `content`, `wordCount`)
+- [ ] Create API routes: `POST /api/dramas`, `GET /api/dramas`, `GET /api/dramas/:id`, `PATCH /api/dramas/:id`, `DELETE /api/dramas/:id`
+- [ ] Create act/scene API routes: nested CRUD under `/api/dramas/:id/acts/:actId/scenes/:sceneId`
+- [ ] Build Drama Editor page (`/dramas/create`, `/dramas/[id]/edit`) with act/scene tree, one-scene-at-a-time editing
+- [ ] Add act/scene CRUD: create, delete, duplicate, reorder acts and scenes
+- [ ] Structured dialogue storage: `{ speaker: "Hamlet", text: "To be or not to be" }` instead of raw text
+- [ ] Build Drama Reader page (`/dramas/[slug]`) with act/scene navigation, jump-to-scene, script formatting
+
+### 6.7 Reader Experience *(New — per-module reading UI)*
+
+- [ ] Book reader: cover page, table of contents, chapter-by-chapter navigation, previous/next chapter, reading progress bar, bookmarking
+- [ ] Biography reader: same layout as Book reader, plus optional timeline, important events, people mentioned, places mentioned (future enhancement)
+- [ ] Drama reader: act/scene tree sidebar, jump directly to any scene, script-format rendering
+- [ ] Shared reading features: adjustable font size, dark mode, reading time estimate, continue-reading
+
+### 6.8 Shared Publishing Engine *(New — cross-module)*
+
+- [ ] Unified status lifecycle: `draft → review → scheduled → published → archived`
+- [ ] Validation rules per module on publish (e.g., book needs title + description + cover + at least one chapter)
+- [ ] **Book-level publish — chapters are never published individually.** Publishing the book freezes a version; edits create a new draft version while the published version stays live
+- [ ] Versioning system: maintain `Published Version` and `Draft Version` per book (inspired by Medium, Notion, Git — never edit the published book directly)
+- [ ] Auto-save every 30 seconds with draft version tracking
+- [ ] Publish locks metadata version
+- [ ] Publishing status display in UI per module
+
+### 6.9 Export System *(New — cross-module)*
+
+- [ ] **Reader PDF** — for reading: cover, TOC, chapters
+- [ ] **Print PDF** — for Amazon KDP / IngramSpark: ISBN placeholder, front matter, copyright page, headers, footers, margins, page numbers
+- [ ] **Manuscript PDF** — for publisher submissions: double-spaced, Courier/Times, submission format
+- [ ] EPUB export (future): for Kindle and ebook readers
+- [ ] Export all four modules: Book, Drama, Poem, Story
+- [ ] Export button in reader UI and editor UI
+
+### 6.10 Resilience — Graceful Degradation ✅
 
 - [x] AI generate API checks `GEMINI_API_KEY` early and returns `503` with a clear message instead of crashing
 - [x] Global `debug: true` removed — now `debug: process.env.NODE_ENV === 'development'`
@@ -138,20 +212,20 @@ Based on the audit, here's what needs to be built:
 - [x] Generate page shows descriptive toast error from API (`"AI generation is currently unavailable"`)
 - [x] Auth config uses `?? ""` fallback for OAuth keys, so missing keys don't crash app startup
 
-### 6.7 Mock Data Pages → API-Driven ✅
+### 6.11 Mock Data Pages → API-Driven ✅
 
 - [x] `/poems` — replaced hardcoded data with `useContents({ type: 'poem' })`, same card UI as homepage
 - [x] `/stories` — replaced hardcoded data with `useContents({ type: 'story' })`
 - [x] `/dramas` — replaced hardcoded data with `useContents({ type: 'drama' })`
 - [x] All show loading spinner, empty state, author avatars, like/comment counts
 
-### 6.8 JSON Schema Validation in API ✅
+### 6.12 JSON Schema Validation in API ✅
 
 - [x] `content: z.any()` replaced with `superRefine` that validates content against type-specific schemas
 - [x] `poemContentSchema`, `storyContentSchema`, `proseContentSchema`, `dramaContentSchema` applied based on `contentType`
 - [x] Invalid content structure returns a `400` with detailed Zod error messages
 
-### 6.9 "Publish on Behalf" / Admin Features ✅
+### 6.13 "Publish on Behalf" / Admin Features ✅
 
 - [x] `POST /api/admin/publish-as` creates content under any user's name (requires admin role)
 - [x] Accepts `authorId` + standard content fields (title, contentType, content, etc.)
@@ -276,6 +350,130 @@ Discriminator base — `contentType` determines the shape:
 
 ---
 
+### Book Module Models *(Proposed)*
+
+#### Book (`models/Book.ts`)
+
+```typescript
+{
+  title: String (required),
+  slug: String (unique, indexed),           // auto-generated from title
+  authorId: ObjectId (ref User, indexed),
+  type: 'Novel' | 'Novella' | 'Biography' | 'Autobiography' | 'Memoir' | 'Anthology' | 'Research' | 'General',
+  subtitle: String,
+  description: String,
+  coverImage: String (URL),
+  tags: [String],
+  status: 'draft' | 'review' | 'scheduled' | 'published' | 'archived',
+  chapterCount: Number,                     // denormalized, updated on chapter CRUD
+  subjectPerson: String,                    // for biography/autobiography
+  birthDate: Date,
+  deathDate: Date,
+  timelineEnabled: Boolean,
+  publishedVersion: Number,                 // current published version ID
+  draftVersion: Number,                     // current draft version ID
+  publishedAt: Date,
+  timestamps: true,
+}
+```
+
+#### Chapter (`models/Chapter.ts`)
+
+```typescript
+{
+  bookId: ObjectId (ref Book, indexed),
+  title: String (required),
+  order: Number,                            // position in book
+  content: Mixed (JSON),                    // Tiptap JSON — same format as Content.content
+  wordCount: Number,                        // auto-computed on save
+  version: Number,                          // which version this chapter belongs to (0 = current draft)
+  timestamps: true,
+}
+```
+
+**Index:** `{ bookId: 1, order: 1 }` (compound — sort chapters by order within a book)
+
+#### Relationship:
+```
+Book (draft — version 0)
+ ├─ Chapter 1 (order: 1)
+ ├─ Chapter 2 (order: 2)
+ └─ Chapter 3 (order: 3)
+
+Book (published — version 1, frozen)
+ ├─ Chapter 1 (order: 1)
+ ├─ Chapter 2 (order: 2)
+ └─ Chapter 3 (order: 3)
+
+Edit → new draft (version 0) created; published version (version 1) stays live.
+Publish draft → freeze as version 2; readers see version 2.
+```
+
+---
+
+### Drama Module Models *(Proposed)*
+
+#### Drama (`models/Drama.ts`)
+
+```typescript
+{
+  title: String (required),
+  slug: String (unique, indexed),
+  authorId: ObjectId (ref User, indexed),
+  type: 'Drama' | 'Play' | 'Screenplay' | 'Stage Script' | 'TV Script',
+  description: String,
+  coverImage: String (URL),
+  status: 'draft' | 'review' | 'scheduled' | 'published' | 'archived',
+  actsCount: Number,                        // denormalized
+  scenesCount: Number,                      // denormalized
+  timestamps: true,
+}
+```
+
+#### Act (`models/Act.ts`)
+
+```typescript
+{
+  dramaId: ObjectId (ref Drama, indexed),
+  title: String (required),
+  order: Number,
+}
+```
+
+**Index:** `{ dramaId: 1, order: 1 }`
+
+#### Scene (`models/Scene.ts`)
+
+```typescript
+{
+  dramaId: ObjectId (ref Drama, indexed),
+  actId: ObjectId (ref Act, indexed),
+  title: String (required),
+  order: Number,
+  content: Mixed (JSON),                    // Tiptap JSON — supports structured dialogue:
+  //   { speaker: "Hamlet", text: "To be or not to be" }
+  //   { type: "paragraph", text: "Stage direction" }
+  wordCount: Number,                        // auto-computed
+}
+```
+
+**Index:** `{ actId: 1, order: 1 }`
+
+#### Relationship:
+```
+Drama
+ ├─ Act I (order: 1)
+ │   ├─ Scene 1 (order: 1)
+ │   ├─ Scene 2 (order: 2)
+ │   └─ Scene 3 (order: 3)
+ │
+ └─ Act II (order: 2)
+     ├─ Scene 1 (order: 1)
+     └─ Scene 2 (order: 2)
+```
+
+---
+
 ## 8. Priority Order
 
 ### ✅ Done (must-do):
@@ -286,10 +484,39 @@ Discriminator base — `contentType` determines the shape:
 
 ### ✅ Done (should-do):
 5. ✅ Content-type–specific Zod validation in API (discriminated union via superRefine)
-6. ❌ Still pending — Add `Drama` to Content model interface + discriminator
-7. ✅ Replace mock data pages with API
+6. ✅ Replace mock data pages with API
 
 ### ✅ Done (nice-to-have):
-8. ❌ Still pending — Chapter/Book writing interface
-9. ✅ "Publish on behalf" admin feature (`POST /api/admin/publish-as`)
-10. ✅ Graceful env var degradation / health check endpoint
+7. ✅ "Publish on behalf" admin feature (`POST /api/admin/publish-as`)
+8. ✅ Graceful env var degradation / health check endpoint
+
+### 🔲 Phase A — Book Module (next)
+- `Book` + `Chapter` models
+- Book CRUD API routes
+- Chapter CRUD API within a book
+- Book Editor page with chapter sidebar (one chapter at a time)
+- Book Reader page with TOC + chapter navigation
+- Comments/likes/bookmarks on books
+
+### 🔲 Phase B — Drama Module
+- `Drama` + `Act` + `Scene` models
+- Drama CRUD API routes
+- Act/Scene CRUD API within a drama
+- Drama Editor page with act/scene tree (one scene at a time)
+- Drama Reader page with act/scene navigation
+- Structured dialogue storage (`{ speaker, text }`)
+
+### 🔲 Phase C — Publishing & Export
+- Shared publishing engine (draft → review → scheduled → published → archived)
+- Validation rules per module
+- Auto-save with draft version tracking
+- PDF export with cover, TOC, page numbers
+- Print-ready PDF for Amazon KDP / IngramSpark
+- EPUB export (future)
+
+### 🔲 Phase D — Production Polish
+- Rate limiting on all API routes
+- Sentry error tracking
+- SEO: metadata, sitemap, robots.txt
+- E2E tests with Playwright
+- CI/CD pipeline with GitHub Actions
