@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -9,91 +9,61 @@ import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { redirect } from 'next/navigation';
 import { useRouter } from 'next/navigation';
-
-import { useEffect } from 'react';
+import { useProfile, useUpdateProfile } from '@/hooks/use-profile';
 
 const formSchema = z.object({
-    name: z.string().min(2, {
-        message: "Name must be at least 2 characters.",
-    }).max(200, {
-        message: "Bio must be at most 200 characters.",
-    }),
-    username: z.string().min(8, {
-        message: "Username must be at least 8 characters.",
-    }).max(200, {
-        message: "Bio must be at most 200 characters.",
-    }),
-    bio: z.string().min(20, {
-        message: "Bio must be at least 20 characters.",
-    }).max(200, {
-        message: "Bio must be at most 200 characters.",
-    }),
+    name: z.string().min(2, "Name must be at least 2 characters.").max(200),
+    username: z.string().min(3, "Username must be at least 3 characters.").max(200),
+    bio: z.string().min(10, "Bio must be at least 10 characters.").max(500, "Bio must be at most 500 characters."),
 });
-
-import { useQuery } from '@tanstack/react-query';
 
 export default function Page() {
     const router = useRouter();
+    const profileQuery = useProfile();
+    const updateProfile = useUpdateProfile();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
-        defaultValues: {
-            name: "",
-            username: "",
-            bio: "",
-        },
-    });
-
-    const query = useQuery({
-        queryKey: ['profile'],
-        queryFn: async () => {
-            const res = await fetch('/api/profile', {
-                method: 'GET',
-                cache: 'no-store',
-            });
-            if (!res.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return res.json();
-        },
+        defaultValues: { name: "", username: "", bio: "" },
     });
 
     useEffect(() => {
-        // Once data is available, set the form's default values
-        if (query.data) {
+        if (profileQuery.data) {
             form.reset({
-                name: query.data.name || "",
-                username: query.data.username || "",
-                bio: query.data.bio || "",
+                name: profileQuery.data.name || "",
+                username: profileQuery.data.username || "",
+                bio: profileQuery.data.bio || "",
             });
         }
-    }, [query.data, form]);
+    }, [profileQuery.data, form]);
 
-    if (query.isLoading) return <p>Loading...</p>;
-    if (query.isError) return <p>Error: Something went wrong!</p>;
+    if (profileQuery.isLoading) {
+      return (
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      );
+    }
 
-    // 2. Define a submit handler.
-    async function onSubmit(values: z.infer<typeof formSchema>) {
-        try{
-            const res = await fetch('/api/profile', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(values),
-            });
-            if (!res.ok) {
-                throw new Error('Failed to update profile');
-            }
+    if (profileQuery.isError) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+          <p className="text-destructive">Error: {(profileQuery.error as Error)?.message || 'Failed to load profile'}</p>
+        </div>
+      );
+    }
 
-            const data = await res.json();
-            console.log(data);
-            router.push('/profile');
-        }catch(error){
-            toast("Failed to update profile");
-        }
+    function onSubmit(values: z.infer<typeof formSchema>) {
+        updateProfile.mutate(values, {
+            onSuccess: () => {
+                toast.success("Profile updated!");
+                router.push('/profile');
+            },
+            onError: (error: unknown) => {
+                toast.error((error as Error).message || "Failed to update profile");
+            },
+        });
     }
 
     return (
@@ -102,7 +72,6 @@ export default function Page() {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                     <h1 className='text-center text-3xl font-bold'>Update Profile</h1>
 
-                    {/* Name Field */}
                     <FormField
                         control={form.control}
                         name="name"
@@ -112,15 +81,12 @@ export default function Page() {
                                 <FormControl>
                                     <Input placeholder="Name" {...field} />
                                 </FormControl>
-                                <FormDescription>
-                                    This is the name of the user.
-                                </FormDescription>
+                                <FormDescription>This is the name of the user.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
 
-                    {/* Bio Field */}
                     <FormField control={form.control} name="bio" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Bio</FormLabel>
@@ -132,7 +98,6 @@ export default function Page() {
                         </FormItem>
                     )} />
 
-                    {/* Username Field */}
                     <FormField control={form.control} name="username" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Username</FormLabel>
@@ -144,16 +109,8 @@ export default function Page() {
                         </FormItem>
                     )} />
 
-                    {/* Submit Button */}
-                    <Button
-                        variant="outline"
-                        onClick={() =>
-                            toast("Profile updated", {
-                                description: "Your Profile has been updated successfully.",
-                            })
-                        }
-                    >
-                        Submit
+                    <Button type="submit" variant="outline" disabled={updateProfile.isLoading}>
+                        {updateProfile.isLoading ? "Saving..." : "Submit"}
                     </Button>
                 </form>
             </Form>
