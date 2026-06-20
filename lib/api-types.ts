@@ -27,6 +27,38 @@ export interface ContentItem {
   updatedAt: string;
 }
 
+export interface BookItem {
+  _id: string;
+  title: string;
+  slug: string;
+  authorId: { _id: string; name: string; email: string; image?: string };
+  type: string;
+  subtitle?: string;
+  description?: string;
+  coverImage?: string;
+  tags: string[];
+  status: 'draft' | 'review' | 'scheduled' | 'published' | 'archived';
+  chapterCount: number;
+  subjectPerson?: string;
+  birthDate?: string;
+  deathDate?: string;
+  timelineEnabled?: boolean;
+  publishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChapterItem {
+  _id: string;
+  bookId: string;
+  title: string;
+  order: number;
+  content: any;
+  wordCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ProfileData {
   _id: string;
   name: string;

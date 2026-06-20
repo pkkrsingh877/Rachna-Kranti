@@ -7,6 +7,12 @@ export const queryKeys = {
     list: (filters?: Record<string, unknown>) => ['content', 'list', filters] as const,
     detail: (id: string) => ['content', 'detail', id] as const,
   },
+  books: {
+    all: ['books'] as const,
+    list: (filters?: Record<string, unknown>) => ['books', 'list', filters] as const,
+    detail: (id: string) => ['books', 'detail', id] as const,
+    chapters: (bookId: string) => ['books', 'chapters', bookId] as const,
+  },
   comments: {
     all: ['comments'] as const,
     list: (contentId: string) => ['comments', 'list', contentId] as const,
