@@ -1,5 +1,11 @@
 import mongoose from "mongoose";
 
+export interface IUserPreferences {
+  theme?: 'light' | 'dark' | 'system';
+  fontSize?: 'sm' | 'base' | 'lg';
+  autoSave?: boolean;
+}
+
 const UserSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
@@ -9,6 +15,11 @@ const UserSchema = new mongoose.Schema({
     username: { type: String, unique: true, sparse: true },
     role: { type: String, enum: ["user", "moderator", "admin"], default: "user" },
     bio: { type: String, default: "" },
+    preferences: {
+      theme: { type: String, enum: ['light', 'dark', 'system'], default: 'system' },
+      fontSize: { type: String, enum: ['sm', 'base', 'lg'], default: 'base' },
+      autoSave: { type: Boolean, default: true },
+    },
   },
   { timestamps: true }
 );
