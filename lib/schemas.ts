@@ -40,6 +40,13 @@ export const dramaContentSchema = z.array(actSchema);
 
 export const contentTypeEnum = z.enum(['poem', 'story', 'prose', 'drama']);
 
+const contentByType: Record<string, z.ZodTypeAny> = {
+  poem: poemContentSchema,
+  story: storyContentSchema,
+  prose: proseContentSchema,
+  drama: dramaContentSchema,
+};
+
 export const contentSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200),
   contentType: contentTypeEnum,
@@ -48,6 +55,18 @@ export const contentSchema = z.object({
   description: z.string().max(500).optional(),
   coverImage: z.string().url().optional(),
   status: z.enum(['draft', 'published']).default('published'),
+}).superRefine((data, ctx) => {
+  const validator = contentByType[data.contentType];
+  if (validator) {
+    const result = validator.safeParse(data.content);
+    if (!result.success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Invalid content structure for "${data.contentType}": ${result.error.issues.map(i => i.message).join(', ')}`,
+        path: ['content'],
+      });
+    }
+  }
 });
 
 export const generateContentSchema = z.object({

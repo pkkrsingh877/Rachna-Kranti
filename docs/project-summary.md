@@ -1,6 +1,6 @@
 # Rachna Kranti — Project Summary
 
-**Rachna Kranti** ("Creative Revolution") is a Next.js-based writing platform that uses AI (Google Gemini) to help users create poems, stories, dramas, and prose. Users sign in via GitHub or Google OAuth, write using a rich Tiptap editor, generate AI-assisted content, and manage their profile.
+**Rachna Kranti** ("Creative Revolution") is a Next.js-based writing platform. Users sign in via email/password or OAuth (Google/GitHub), write using a rich Tiptap editor, generate AI-assisted content, publish poems/stories/dramas/prose, and engage with other writers via likes, comments, and follows.
 
 ---
 
@@ -11,15 +11,16 @@
 | Framework | Next.js 15.3.1 (App Router, Turbopack) |
 | Language | TypeScript (strict) |
 | Styling | Tailwind CSS v4 + SCSS |
-| UI Library | shadcn/ui (Radix primitives), Lucide icons |
+| UI Library | Custom Radix-based components + shadcn/ui, Lucide icons |
 | Editor | Tiptap v2 (ProseMirror) with extensive custom extensions |
-| Auth | NextAuth.js v4 (GitHub + Google OAuth) |
-| Database | MongoDB via Mongoose v8 |
+| Auth | NextAuth.js v4 — email/password (Credentials) + GitHub OAuth + Google OAuth |
+| Database | MongoDB via Mongoose v8 (collection: `literaryWorks`) |
 | AI | Google Gemini 2.0 Flash Lite (`@google/generative-ai`) |
 | Forms | React Hook Form + Zod |
 | Data Fetching | TanStack React Query v4 |
 | Notifications | Sonner |
-| Theming | next-themes + CSS variables (dark/light) |
+| Theming | next-themes + CSS variables (rose/teal/white, dark/light) |
+| Email | Resend API (password resets) |
 
 ---
 
@@ -27,116 +28,96 @@
 
 | Path | Description |
 |---|---|
-| `/` | Home page (hardcoded featured poems, stories, dramas) |
-| `/stories` | Hardcoded story listing |
-| `/poems` | Hardcoded poem listing |
-| `/poems/write` | Simple Zod-validated poem form (logs to console only) |
-| `/dramas` | Hardcoded drama listing |
-| `/content` | Browse user-generated content (fetched from API via React Query) |
-| `/content/write` | Full Tiptap rich text editor (logs to console only) |
-| `/content/[id]` | View single content by ID |
+| `/` | Home page — featured poems/stories/dramas from API |
+| `/login` | Email/password + Google/GitHub OAuth sign-in |
+| `/register` | Create account (name, email, password) |
+| `/forgot-password` | Enter email to receive reset link |
+| `/reset-password/[token]` | Set new password with reset token |
+| `/poems` | Browse poems (API-driven) |
+| `/stories` | Browse stories (API-driven) |
+| `/dramas` | Browse dramas (API-driven) |
+| `/content` | Browse all user-generated content (API, paginated) |
+| `/content/write` | Create/edit content via Tiptap editor (supports `?id=` for edits) |
+| `/content/[id]` | View single content (with likes, comments, follow author) |
+| `/content/generate` | AI-assisted content generation |
 | `/profile` | View user profile |
 | `/profile/update` | Update profile (name, username, bio) |
+| `/api/health` | Health check — reports all env var statuses |
+
+---
 
 ## API Routes
 
 | Endpoint | Methods | Description |
 |---|---|---|
 | `/api/auth/[...nextauth]` | GET, POST | NextAuth authentication handler |
+| `/api/auth/register` | POST | Create email/password account |
+| `/api/auth/forgot-password` | POST | Send password reset email |
+| `/api/auth/reset-password` | POST | Reset password with token |
 | `/api/profile` | GET, PATCH | Fetch/update authenticated user's profile |
-| `/api/content` | GET | List all content (sorted by createdAt desc) |
-| `/api/content/[id]` | GET | Get single content by MongoDB ObjectId |
-| `/api/content/generate` | POST | Generate content via Google Gemini AI and save to DB |
-
----
-
-## Current State & Known Issues
-
-### Authentication
-- NextAuth is configured with **GitHub OAuth** and **Google OAuth** providers.
-- The middleware (`middleware.ts`) protects **all routes** — no pages are public.
-- GitHub OAuth is functional.
-- **Google OAuth is broken** — the Google Cloud project credentials (`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`) were deleted from Google Cloud Console and have not been recreated.
-
-### AI Content Generation
-- The `/api/content/generate` endpoint uses Google Gemini (`gemini-2.0-flash-lite-001`) via the `@google/generative-ai` SDK.
-- The `GEMINI_API_KEY` in `.env.local` was also deleted from Google Cloud.
-- **AI generation will not work** until a new Google Cloud project is created and a fresh API key is generated.
-
-### Content Saving
-- Both `/poems/write` and `/content/write` forms log content to console and show a toast — **they do not save to the database**.
-- The only endpoint that persists content to MongoDB is the AI generation endpoint (`/api/content/generate`).
-
-### Data Inconsistency
-- The home page and `/poems`, `/stories`, `/dramas` routes use **hardcoded placeholder data**.
-- The `/content/*` routes use **API-fetched data from MongoDB**.
-- This creates two parallel content display systems with no overlap.
-
-### Database
-- `.env.local` has `MONGODB_URI` pointing to database `fragnifique`.
-- `lib/db.ts` overrides with `dbName: "test_rachna_kranti"`.
-- The MongoDB connection string includes live credentials.
-
-### Environment Variables
-
-| Variable | Status | Purpose |
-|---|---|---|
-| `NEXTAUTH_URL` | Set | `http://localhost:3000` |
-| `NEXTAUTH_SECRET` | Set | JWT encryption |
-| `GITHUB_CLIENT_ID` | Set | GitHub OAuth |
-| `GITHUB_CLIENT_SECRET` | Set | GitHub OAuth |
-| `GOOGLE_CLIENT_ID` | Set but **invalid** | Google OAuth (deleted from Google Cloud) |
-| `GOOGLE_CLIENT_SECRET` | Set but **invalid** | Google OAuth (deleted from Google Cloud) |
-| `MONGODB_URI` | Set | MongoDB Atlas connection |
-| `GEMINI_API_KEY` | Set but **invalid** | Google Gemini AI (deleted from Google Cloud) |
-
----
-
-## Editor (Tiptap)
-
-The project has a deeply customized Tiptap editor with:
-- StarterKit (headings, paragraphs, lists, blockquotes, code blocks, HR)
-- Text alignment (left, center, right, justify)
-- Bold, italic, strike, code, underline
-- Highlight (multicolor), superscript, subscript
-- Task lists
-- Image embedding & upload (with progress tracking)
-- Links (custom enhanced extension)
-- Selection decorations
-- Trailing node enforcement
-- Dark/light theme toggle
-- 37 custom SVG icon components
-- 24 toolbar UI components
-- 5 custom nodes with SCSS styling
-- 3 custom extensions
+| `/api/content` | GET, POST | List (paginated, filtered, sorted) / create content |
+| `/api/content/[id]` | GET, PATCH, DELETE | Read / partial update / delete (author or admin) |
+| `/api/content/generate` | POST | Generate content via Google Gemini AI |
+| `/api/content/[id]/comments` | GET, POST | List / add comments |
+| `/api/content/[id]/comments/[commentId]` | DELETE | Delete comment |
+| `/api/content/[id]/like` | GET, POST, DELETE | Check / add / remove like |
+| `/api/users/[id]/follow` | GET, POST, DELETE | Check / add / remove follow |
+| `/api/users/[id]/followers` | GET | List followers |
+| `/api/users/[id]/following` | GET | List following |
+| `/api/notifications` | GET | List notifications |
+| `/api/notifications` | PATCH | Mark notification as read |
+| `/api/notifications?unread=true` | GET | Unread notification count |
+| `/api/admin/publish-as` | POST | Admin creates content under any user |
+| `/api/health` | GET | Environment variable status check |
 
 ---
 
 ## Data Models (MongoDB/Mongoose)
 
-- **User**: name, email, image, provider, username, role, bio
-- **Content** (discriminator base, collection `literaryWorks`): title, authorId, contentType, content (JSON), tags, description
+- **User**: name, email, image, password (optional), provider, providerAccountId, username, role, bio, resetToken, resetTokenExpiry, preferences (theme, fontSize, autoSave)
+- **Content** (discriminator base, collection `literaryWorks`): title, slug, authorId, contentType, content (JSON/Mixed), tags, description, excerpt, coverImage, status (draft/published/archived), publishedAt, aiGenerated, aiModel, likesCount, commentsCount, wordCount, readingTime
   - Discriminators: Poem, Prose, Story (same schema, differentiated by `contentType`)
-- **Prompt**: title, prompt, content reference
+- **Comment**: contentId, authorId, text, parentId (threaded replies)
+- **Like**: contentId, userId (compound unique index)
+- **Follow**: followerId, followingId (compound unique index)
+- **Notification**: type (like/comment/follow/reply), recipientId, senderId, contentId, read
 
 ---
 
-## Getting Started
+## Security & Architecture
 
-```bash
-# Install dependencies
-npm install
+- **Auth**: Sessions handled by NextAuth (JWT strategy). Credentials provider + OAuth.
+- **Middleware**: Custom middleware — protects `/content/*`, `/profile/*`, `/api/content/*`. Public: `/login`, `/register`, `/forgot-password`, `/reset-password`, `/api/auth/*`, `/api/health`.
+- **Content ownership**: Only the author or an admin can PATCH/DELETE content. Delete cascades to comments, likes, notifications.
+- **Validation**: Zod schemas validate all inputs. Content structure is validated per type (poemContentSchema, dramaContentSchema, etc.).
+- **Admin**: Admin role required for `/api/admin/publish-as`. Moderation pipeline TBD.
 
-# You need a valid .env.local with working credentials.
-# At minimum, GitHub OAuth + MongoDB need to work for basic functionality.
-# Google OAuth and Gemini require a new Google Cloud project.
+---
 
-# Run development server
-npm run dev
-```
+## Environment Variables
 
-### To restore Google integrations:
-1. Create a new project at https://console.cloud.google.com
-2. Enable the **Gemini API** and generate an API key → set as `GEMINI_API_KEY`
-3. Configure the **OAuth consent screen** and create OAuth 2.0 credentials → set as `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`
-4. Add `http://localhost:3000` as an authorized redirect URI
+| Variable | Required | Purpose |
+|---|---|---|
+| `NEXTAUTH_URL` | Yes | `http://localhost:3000` |
+| `NEXTAUTH_SECRET` | Yes | JWT encryption |
+| `MONGODB_URI` | Yes | MongoDB Atlas connection |
+| `GITHUB_CLIENT_ID` | Optional | GitHub OAuth |
+| `GITHUB_CLIENT_SECRET` | Optional | GitHub OAuth |
+| `GOOGLE_CLIENT_ID` | Optional | Google OAuth |
+| `GOOGLE_CLIENT_SECRET` | Optional | Google OAuth |
+| `GEMINI_API_KEY` | Optional | Google Gemini AI (generation disabled if missing) |
+| `RESEND_API_KEY` | Optional | Password reset emails (disabled if missing) |
+| `EMAIL_FROM` | Optional | Sender address for reset emails |
+
+---
+
+## Known Gaps
+
+1. **Drama discriminator**: `contentType: 'Drama'` is accepted by Zod/API but not in the Mongoose model interface — no discriminator model defined.
+2. **Chapter/Book model**: No dedicated structure — novels are one giant `content` blob.
+3. **Rate limiting**: Not implemented on API routes.
+4. **Sentry**: Error tracking not set up.
+5. **E2E tests**: No Playwright tests.
+6. **CI/CD**: No GitHub Actions pipeline.
+7. **Soft deletes**: Content is hard-deleted.
+8. **SEO**: No sitemap or robots.txt.

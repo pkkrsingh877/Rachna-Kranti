@@ -1,14 +1,9 @@
-// app/api/content/generate/route.ts
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { connectToDB } from '@/lib/db';
 import User from '@/models/User';
 import { Content } from '@/models/Content';
-
-// Access your API key from environment variables
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function POST(request: Request) {
     try {
@@ -18,10 +13,21 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        connectToDB(); // Ensure DB connection is established
+        if (!process.env.GEMINI_API_KEY) {
+            return NextResponse.json({ error: 'AI generation is currently unavailable. Please configure a GEMINI_API_KEY.' }, { status: 503 });
+        }
+
+        await connectToDB();
         const user = await User.findOne({ email: session.user.email });
 
+        if (!user) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+
+        const { GoogleGenerativeAI } = await import("@google/generative-ai");
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite-001" });
+
         const { title, prompt, type } = await request.json();
 
         if (!prompt) {
@@ -58,7 +64,7 @@ export async function POST(request: Request) {
         Return JSON like:
         {
           "title": "Example Title",
-          "content_type": "story",  // or prose
+          "content_type": "story",
           "prompt": "User prompt here",
           "content": [
             {
@@ -114,10 +120,7 @@ export async function POST(request: Request) {
         - Keep content under 5000 characters total.
         `);
         const responseText = result.response.text();
-        // Remove code block fences if they exist
         const cleanJsonString = responseText.replace(/```json|```/g, '').trim();
-
-        // Now parse
         const parsed = JSON.parse(cleanJsonString);
 
         const content = new Content({
@@ -132,7 +135,7 @@ export async function POST(request: Request) {
         await content.save();
 
         return NextResponse.json({ output: responseText });
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error generating content:", error);
         return NextResponse.json({ error: "Failed to generate content." }, { status: 500 });
     }

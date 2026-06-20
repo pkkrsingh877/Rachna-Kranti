@@ -40,7 +40,8 @@ export default function Page() {
                 router.push('/content');
             },
             onError: (error: unknown) => {
-                toast.error((error as Error).message || "Failed to generate content");
+                const message = (error as Error).message || "Failed to generate content";
+                toast.error(message);
             },
         });
     }

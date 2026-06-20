@@ -2,15 +2,18 @@
 
 ---
 
-## 1. Can users log in without Google/GitHub?
+## 1. Can users log in without Google/GitHub? ✅
 
-**No.** The app only has OAuth providers (Google + GitHub). There is:
-- No email/password `Credentials` provider in `next-auth`
-- No login page (`/login`)
-- No sign-up/registration page
-- No password reset / forgot password flow
+**Yes.** The app now supports email/password login via a `CredentialsProvider` in `next-auth`:
+- `/login` page with email/password form (plus Google/GitHub OAuth buttons)
+- `/register` page with sign-up form (name, email, password, bcrypt hashing)
+- `/forgot-password` page — enters email, receives reset link
+- `/reset-password/[token]` page — sets new password
+- `POST /api/auth/register`, `/api/auth/forgot-password`, `/api/auth/reset-password`
+- `password`, `resetToken`, `resetTokenExpiry` fields on `User` model (optional for OAuth users)
+- Password reset emails via Resend API (free on Vercel, 100 emails/day)
 
-If both Google and GitHub OAuth keys are dead/missing, **nobody can log in**.
+Both credentials and OAuth providers work in parallel. Users can also link their email account to OAuth by signing in with the same email via Google/GitHub.
 
 ---
 
@@ -20,46 +23,46 @@ If both Google and GitHub OAuth keys are dead/missing, **nobody can log in**.
 |---|---|
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` missing | Google login button shows, but fails with error on click. Falls back to `""`, provider returns error at runtime. |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` missing | Same — GitHub login button shows but fails. |
-| `GEMINI_API_KEY` missing | AI generation endpoint (`/api/content/generate`) returns 500. The rest of the app (read, write, edit) works fine. |
+| `GEMINI_API_KEY` missing | AI generation endpoint (`/api/content/generate`) returns `503` with `"AI generation is currently unavailable"`. Rest of app works fine. |
 | `MONGODB_URI` missing | **App crashes on startup** — throws immediately in `lib/db.ts`. Must be set. |
 | `NEXTAUTH_SECRET` missing | next-auth may fail to encrypt session tokens. |
 
-**Verdict:** Without at least one working OAuth provider, the app is **completely locked**. The architecture does NOT fall apart otherwise — reading, writing, updating content all depend only on MongoDB being available and the user being authenticated.
+**Verdict:** The app now works with email/password alone — OAuth providers are optional. Reading, writing, updating content all depend only on MongoDB being available and the user being authenticated.
 
 ---
 
-## 3. Content CRUD — what exists vs what's missing
+## 3. Content CRUD — what exists vs what's missing ✅
 
 | Operation | Endpoint | Status |
 |---|---|---|
 | Create | `POST /api/content` | ✅ Works |
 | Read (list) | `GET /api/content` | ✅ Works with pagination, filtering, sorting |
 | Read (single) | `GET /api/content/:id` | ✅ Works |
-| **Update** | `PUT /api/content/:id` or `PATCH /api/content/:id` | ❌ **Missing — content cannot be edited after creation** |
-| **Delete** | `DELETE /api/content/:id` | ❌ **Missing — content cannot be deleted** |
-| **Status transition** | None | ❌ Cannot publish/unpublish/archive |
+| **Update** | `PATCH /api/content/:id` | ✅ Partial update (title, content, tags, description, excerpt, coverImage, status). Author/admin guard. |
+| **Delete** | `DELETE /api/content/:id` | ✅ Cascade deletes comments, likes, notifications. Author/admin guard. |
+| **Status transition** | Via `PATCH` | ✅ Publish/unpublish/archive by setting `status` field. `publishedAt` set automatically. |
 
-**This means:** A user can write a poem or story, but once saved, they can never edit or delete it. This is a critical gap for a writing platform.
+Edit/delete buttons appear on `/content/[id]` for the author. The `/content/write` page accepts `?id=` to load existing content into the form + editor and switches to `PATCH` on submit.
 
 ---
 
-## 4. Content model — is it structured for dramas, novels, chapters, books?
+## 4. Content model — is it structured for dramas, novels, chapters, books? ✅
 
-**Partially.**
+**Partially — gaps remain.**
 
 ### What the model supports:
-- **Content type:** discriminator field (`Poem`, `Prose`, `Story` — but NOT `Drama` in the TS interface, even though Zod schemas support it)
+- **Content type:** discriminator field (`Poem`, `Prose`, `Story` — but NOT `Drama` in the TS interface, even though Zod schemas and API validation support it)
 - **Content field:** `Schema.Types.Mixed` — stores arbitrary JSON. The Zod schemas define expected shapes:
   - **Poem:** `[{ type: "stanza", lines: string[] }]`
   - **Story/Prose:** `[{ type: "paragraph", text: string }]`
   - **Drama:** `[{ type: "act", title, scenes: [...] }]`
 - **Status:** `draft`, `published`, `archived`
+- **Content-type–specific validation:** ✅ Applied via `superRefine` in `contentSchema`
+- **Publish on behalf:** ✅ Available via `POST /api/admin/publish-as` (admin role)
 
-### What's missing:
-- **No `Drama` discriminator model** — the model interface doesn't include `'Drama'`, and no discriminator model is defined for it.
-- **No `Chapter` / `Book` model** — novels and books are stored as generic `content: Mixed`. There's no dedicated model for chapters, books, or collections.
-- **No content-type–specific validation** — the API only validates with `z.any()` for content; the specific validators (`poemContentSchema`, etc.) exist but are never applied.
-- **No "publish on behalf of"** — content is always authored by the authenticated user. No admin/mod impersonation, no co-author workflow.
+### What's still missing:
+- **No `Drama` discriminator model** — the model interface doesn't include `'Drama'`, and no discriminator model is defined for it. Creating content with `contentType: 'drama'` is permitted at the API/Zod level but Mongoose won't enforce a discriminator.
+- **No `Chapter` / `Book` model** — novels and books are stored as generic `content: Mixed`. No dedicated model for chapters, books, or collections.
 
 ---
 
@@ -117,7 +120,7 @@ Based on the audit, here's what needs to be built:
 
 - [ ] Update `IBaseWork.contentType` to include `'Drama'`
 - [ ] Add `Drama` discriminator model
-- [ ] Apply content-type–specific Zod validation in the API route (`poemContentSchema`, `dramaContentSchema`, etc.)
+- [x] Content-type–specific Zod validation in API route (`poemContentSchema`, `dramaContentSchema`, etc.) ✅ done in 6.8
 
 ### 6.5 Editor — Chapter/Novel/Book Writing Interface *(Future / Nice-to-have)*
 
@@ -127,45 +130,166 @@ Based on the audit, here's what needs to be built:
 - [ ] Add book metadata fields (cover image, ISBN, publisher info, copyright notice)
 - [ ] Create a `/books/write/[id]` page for book editing
 
-### 6.6 Resilience — Graceful Degradation
+### 6.6 Resilience — Graceful Degradation ✅
 
-- [ ] Wrap all API routes that depend on optional env vars with descriptive error messages
-- [ ] On the AI generation page, show a clear "AI generation is currently unavailable" message instead of a generic 500
-- [ ] On the login page, show both provider buttons but handle failures gracefully (e.g., "This sign-in method is currently unavailable")
-- [ ] Add a health check endpoint or startup validation for required env vars
-- [ ] Remove `debug: true` from next-auth config in production
+- [x] AI generate API checks `GEMINI_API_KEY` early and returns `503` with a clear message instead of crashing
+- [x] Global `debug: true` removed — now `debug: process.env.NODE_ENV === 'development'`
+- [x] Health check endpoint at `GET /api/health` — reports status of all env vars (database, nextauth, gemini, resend, OAuth)
+- [x] Generate page shows descriptive toast error from API (`"AI generation is currently unavailable"`)
+- [x] Auth config uses `?? ""` fallback for OAuth keys, so missing keys don't crash app startup
 
-### 6.7 Mock Data Pages → API-Driven
+### 6.7 Mock Data Pages → API-Driven ✅
 
-- [ ] Replace hardcoded data in `/poems`, `/stories`, `/dramas` with live API queries (same pattern as `app/page.tsx`)
+- [x] `/poems` — replaced hardcoded data with `useContents({ type: 'poem' })`, same card UI as homepage
+- [x] `/stories` — replaced hardcoded data with `useContents({ type: 'story' })`
+- [x] `/dramas` — replaced hardcoded data with `useContents({ type: 'drama' })`
+- [x] All show loading spinner, empty state, author avatars, like/comment counts
 
-### 6.8 JSON Schema Validation in API
+### 6.8 JSON Schema Validation in API ✅
 
-- [ ] Replace `content: z.any()` in `contentSchema` with discriminated union based on `contentType`
-- [ ] Apply `poemContentSchema` for poems, `dramaContentSchema` for dramas, etc.
+- [x] `content: z.any()` replaced with `superRefine` that validates content against type-specific schemas
+- [x] `poemContentSchema`, `storyContentSchema`, `proseContentSchema`, `dramaContentSchema` applied based on `contentType`
+- [x] Invalid content structure returns a `400` with detailed Zod error messages
 
-### 6.9 "Publish on Behalf" / Admin Features *(Future)*
+### 6.9 "Publish on Behalf" / Admin Features ✅
 
-- [ ] Add a `role: "admin"` check on a publish-as-endpoint
-- [ ] Create `POST /api/admin/publish-as` — admin creates content under another user's name
-- [ ] Co-author / contributor model
+- [x] `POST /api/admin/publish-as` creates content under any user's name (requires admin role)
+- [x] Accepts `authorId` + standard content fields (title, contentType, content, etc.)
+- [x] Validates with `contentSchema` including type-specific content validation
+- [x] For non-admin users, returns `403 Forbidden`
 
 ---
 
-## 7. Priority Order
+---
 
-### Must-do (blocking basic functionality):
-1. Email/password auth (Credentials provider) + login page + register page
-2. Forgot password / reset password flow
-3. Content update (`PUT /api/content/:id`) + delete (`DELETE /api/content/:id`)
-4. Wire edit mode in `/content/write` for existing content
+## 7. DB Design — Models Overview
 
-### Should-do (completing Phase 3):
-5. Content-type–specific Zod validation in API
-6. Add `Drama` to Content model interface + discriminator
-7. Replace mock data pages with API
+### User (`models/User.ts`)
 
-### Nice-to-have:
-8. Chapter/Book writing interface
-9. "Publish on behalf" admin feature
-10. Graceful env var degradation / user-facing error messages
+```typescript
+{
+  name: String (required),
+  email: String (required, unique),
+  image: String,                          // OAuth avatar URL
+  password: String,                       // bcrypt hash (credentials users only)
+  provider: String,                       // 'google' | 'github' | undefined (for OAuth)
+  providerAccountId: String,              // OAuth account ID
+  username: String (unique, sparse),
+  role: 'user' | 'moderator' | 'admin',
+  bio: String,
+  resetToken: String,                     // password reset
+  resetTokenExpiry: Date,
+  preferences: {
+    theme: 'light' | 'dark' | 'system',
+    fontSize: 'sm' | 'base' | 'lg',
+    autoSave: Boolean,
+  },
+  timestamps: true,
+}
+```
+
+### Content (`models/Content.ts`) — collection: `literaryWorks`
+
+Discriminator base — `contentType` determines the shape:
+
+```typescript
+{
+  title: String (required, indexed),
+  slug: String (indexed),                 // auto-generated from title on save
+  authorId: ObjectId (ref User, indexed),
+  contentType: 'Poem' | 'Prose' | 'Story', // Missing: 'Drama' in model interface (Zod/API accept it)
+  content: Mixed (JSON),                  // per-type schemas:
+  //   Poem:    [{ type: "stanza", lines: string[] }]
+  //   Prose:   [{ type: "paragraph", text: string }]
+  //   Story:   [{ type: "paragraph", text: string }]
+  //   Drama:   [{ type: "act", title, scenes: [...] }]
+  tags: [String],
+  description: String,
+  excerpt: String (max 280),
+  coverImage: String (URL),
+  status: 'draft' | 'published' | 'archived' (indexed),
+  publishedAt: Date,
+  aiGenerated: Boolean,
+  aiModel: String,
+  likesCount: Number,
+  commentsCount: Number,
+  wordCount: Number,                       // auto-computed on save
+  readingTime: Number,                     // auto-computed on save (ceil(wordCount/200))
+  timestamps: true,
+}
+```
+
+**Discriminators:** `Poem`, `Prose`, `Story` — same schema, differentiated by `contentType`.
+
+### Comment (`models/Comment.ts`)
+
+```typescript
+{
+  contentId: ObjectId (ref Content, indexed),
+  authorId: ObjectId (ref User, indexed),
+  text: String (required, max 2000),
+  parentId: ObjectId (ref Comment),       // null = top-level; non-null = reply
+  timestamps: true,
+}
+```
+
+**Index:** `{ contentId: 1, createdAt: -1 }`
+
+### Like (`models/Like.ts`)
+
+```typescript
+{
+  contentId: ObjectId (ref Content, indexed),
+  userId: ObjectId (ref User, indexed),
+  createdAt: Date,
+}
+```
+
+**Index:** `{ contentId: 1, userId: 1 }` (unique compound — one like per user per content)
+
+### Follow (`models/Follow.ts`)
+
+```typescript
+{
+  followerId: ObjectId (ref User, indexed),
+  followingId: ObjectId (ref User, indexed),
+  createdAt: Date,
+}
+```
+
+**Index:** `{ followerId: 1, followingId: 1 }` (unique compound)
+
+### Notification (`models/Notification.ts`)
+
+```typescript
+{
+  type: 'like' | 'comment' | 'follow' | 'reply',
+  recipientId: ObjectId (ref User, indexed),
+  senderId: ObjectId (ref User, indexed),
+  contentId: ObjectId (ref Content),
+  read: Boolean (default: false),
+  timestamps: true,
+}
+```
+
+**Index:** `{ recipientId: 1, createdAt: -1 }`, `{ recipientId: 1, read: 1 }`
+
+---
+
+## 8. Priority Order
+
+### ✅ Done (must-do):
+1. ✅ Email/password auth (Credentials provider) + login page + register page
+2. ✅ Forgot password / reset password flow (Resend email)
+3. ✅ Content update (`PATCH /api/content/:id`) + delete (`DELETE /api/content/:id`) with cascade
+4. ✅ Edit mode in `/content/write` via `?id=` param
+
+### ✅ Done (should-do):
+5. ✅ Content-type–specific Zod validation in API (discriminated union via superRefine)
+6. ❌ Still pending — Add `Drama` to Content model interface + discriminator
+7. ✅ Replace mock data pages with API
+
+### ✅ Done (nice-to-have):
+8. ❌ Still pending — Chapter/Book writing interface
+9. ✅ "Publish on behalf" admin feature (`POST /api/admin/publish-as`)
+10. ✅ Graceful env var degradation / health check endpoint
