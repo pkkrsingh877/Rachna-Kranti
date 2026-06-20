@@ -43,11 +43,11 @@
 
 | # | Task | Status |
 |---|---|---|
-| 3.1 | Build `Comment` model + API + UI | ![ ] Pending |
-| 3.2 | Build `Like`/`Heart` system (backend + frontend) | ![ ] Pending |
-| 3.3 | Build `Follow` system | ![ ] Pending |
-| 3.4 | Add `Notification` model + basic in-app notifications | ![ ] Pending |
-| 3.5 | Filter homepage content from API instead of hardcoded data | ![ ] Pending |
+| 3.1 | Build `Comment` model + API (`GET/POST /api/content/:id/comments`, `DELETE /api/content/:id/comments/:commentId`) + `CommentSection` component with reply support | ![x] Done |
+| 3.2 | Build `Like` model + API (`GET/POST/DELETE /api/content/:id/like`) + `LikeButton` component with optimistic updates | ![x] Done |
+| 3.3 | Build `Follow` model + API (`GET/POST/DELETE /api/users/:id/follow`, `GET /api/users/:id/followers`, `GET /api/users/:id/following`) + `FollowButton` component | ![x] Done |
+| 3.4 | Build `Notification` model + API (`GET /api/notifications`, `PATCH /api/notifications` mark read) + `NotificationBell` component with unread badge | ![x] Done |
+| 3.5 | Replace hardcoded `Poems`/`Stories`/`Dramas` homepage components with API-driven `useContents()` queries | ![x] Done |
 
 ---
 

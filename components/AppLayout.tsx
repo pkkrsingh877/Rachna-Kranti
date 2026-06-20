@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/Avatar';
+import NotificationBell from '@/components/NotificationBell';
 
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
@@ -104,6 +105,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     {session.user.email}
                   </p>
                 </div>
+                <div className="md:hidden">
+                  <NotificationBell />
+                </div>
               </div>
             ) : (
               <button
@@ -157,6 +161,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {/* Desktop quick-actions */}
           {status === 'authenticated' ? (
             <div className="hidden md:flex items-center gap-2">
+              <NotificationBell />
               <Link
                 href="/content/write"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition-colors"

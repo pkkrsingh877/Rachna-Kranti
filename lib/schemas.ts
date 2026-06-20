@@ -56,5 +56,11 @@ export const generateContentSchema = z.object({
   type: contentTypeEnum,
 });
 
+export const commentSchema = z.object({
+  text: z.string().min(1, 'Comment cannot be empty').max(2000),
+  parentId: z.string().optional(),
+});
+
 export type ContentInput = z.infer<typeof contentSchema>;
 export type GenerateContentInput = z.infer<typeof generateContentSchema>;
+export type CommentInput = z.infer<typeof commentSchema>;

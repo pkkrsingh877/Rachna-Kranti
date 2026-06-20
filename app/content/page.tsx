@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Toaster } from "@/components/ui/sonner";
 import { useRouter } from 'next/navigation';
 import { useContents } from '@/hooks/use-content';
-import { Avatar } from '@/components/Avatar';
+
 
 export default function Page() {
     const router = useRouter();
@@ -85,6 +85,10 @@ export default function Page() {
                                 )}
                               </div>
                             </div>
+                        </div>
+                        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                          <span>{content.likesCount} likes</span>
+                          <span>{content.commentsCount ?? 0} comments</span>
                         </div>
                         {content.excerpt && (
                           <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{content.excerpt}</p>

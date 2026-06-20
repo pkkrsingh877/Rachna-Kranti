@@ -2,14 +2,19 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Toaster } from "@/components/ui/sonner";
 import { useContent } from '@/hooks/use-content';
 import { Avatar } from '@/components/Avatar';
+import LikeButton from '@/components/LikeButton';
+import FollowButton from '@/components/FollowButton';
+import CommentSection from '@/components/CommentSection';
 
 export default function Page() {
     const router = useRouter();
     const params = useParams();
+    const { data: session } = useSession();
     const contentId = params.id as string;
 
     const query = useContent(contentId);
@@ -48,6 +53,11 @@ export default function Page() {
                           })}
                           {content.readingTime && ` · ${content.readingTime} min read`}
                         </p>
+                      </div>
+                      <div className="ml-auto">
+                        {session?.user?.email !== content.authorId?.email && (
+                          <FollowButton authorId={content.authorId._id} />
+                        )}
                       </div>
                     </>
                   )}
@@ -99,6 +109,15 @@ export default function Page() {
                     </div>
                   ))}
                 </div>
+
+                <div className="flex items-center gap-3 mt-6">
+                  <LikeButton contentId={contentId} />
+                  <span className="text-sm text-muted-foreground">
+                    {content.commentsCount ?? 0} comments
+                  </span>
+                </div>
+
+                <CommentSection contentId={contentId} />
 
                 <Button className="mt-8" variant="outline" onClick={() => router.push('/content')}>
                     ← Back to All Contents

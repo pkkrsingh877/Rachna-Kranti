@@ -16,6 +16,7 @@ export interface IBaseWork extends Document {
   aiGenerated: boolean;
   aiModel?: string;
   likesCount: number;
+  commentsCount: number;
   wordCount?: number;
   readingTime?: number;
   createdAt: Date;
@@ -52,6 +53,7 @@ const contentSchema = new Schema<IBaseWork>({
   aiGenerated: { type: Boolean, default: false },
   aiModel: { type: String },
   likesCount: { type: Number, default: 0 },
+  commentsCount: { type: Number, default: 0 },
   wordCount: { type: Number },
   readingTime: { type: Number },
 }, baseOptions);
