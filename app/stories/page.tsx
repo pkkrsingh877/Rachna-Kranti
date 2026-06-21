@@ -21,29 +21,35 @@ export default function Stories() {
   const stories = data?.results || [];
 
   return (
-    <PageContainer>
-      <h1 className="text-2xl font-bold mb-6">Stories</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <PageContainer className="py-8 md:py-12">
+      <h1 className="text-3xl font-bold tracking-tight mb-8">Stories</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {stories.length === 0 ? (
-          <p className="text-muted-foreground col-span-full">No stories yet.</p>
+          <p className="text-muted-foreground col-span-full text-center py-16">No stories yet.</p>
         ) : (
           stories.map((story) => (
             <button
               key={story._id}
               onClick={() => router.push(`/content/${story._id}`)}
-              className="border p-4 rounded-xl shadow-sm bg-card text-left hover:shadow-md transition-shadow"
+              className="group flex flex-col border border-border rounded-xl bg-card p-5 text-left transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
             >
-              <h2 className="text-lg font-semibold line-clamp-1 mb-2">{story.title}</h2>
-              {story.authorId && (
-                <div className="flex items-center gap-2 mb-2">
-                  <Avatar src={story.authorId.image} name={story.authorId.name} size="sm" />
-                  <span className="text-sm text-muted-foreground">{story.authorId.name}</span>
+              <h2 className="text-base font-semibold line-clamp-2 group-hover:text-brand-600 transition-colors mb-3">
+                {story.title}
+              </h2>
+              {(story.authorId || story.excerpt) && (
+                <div className="space-y-2 mb-3">
+                  {story.authorId && (
+                    <div className="flex items-center gap-2">
+                      <Avatar src={story.authorId.image} name={story.authorId.name} size="sm" />
+                      <span className="text-sm text-muted-foreground">{story.authorId.name}</span>
+                    </div>
+                  )}
+                  {story.excerpt && (
+                    <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{story.excerpt}</p>
+                  )}
                 </div>
               )}
-              {story.excerpt && (
-                <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{story.excerpt}</p>
-              )}
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <div className="flex items-center gap-3 mt-auto text-xs text-muted-foreground pt-2">
                 <span className="inline-flex items-center gap-1">
                   <Heart className="w-3 h-3" /> {story.likesCount}
                 </span>

@@ -31,7 +31,7 @@
   --popover-foreground: oklch(0.1 0 0);
   --primary: oklch(0.55 0.22 15);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.55 0.12 195);
+  --secondary: oklch(0.45 0.18 260);
   --secondary-foreground: oklch(1 0 0);
   --muted: oklch(0.96 0.005 285);
   --muted-foreground: oklch(0.5 0.01 285);
@@ -43,7 +43,7 @@
   --input: oklch(0.9 0.01 285);
   --ring: oklch(0.55 0.22 15);
   --chart-1: oklch(0.55 0.22 15);
-  --chart-2: oklch(0.55 0.12 195);
+  --chart-2: oklch(0.45 0.18 260);
   --chart-3: oklch(0.4 0.1 265);
   --chart-4: oklch(0.65 0.15 85);
   --chart-5: oklch(0.6 0.18 15);
@@ -112,7 +112,7 @@
   --popover-foreground: oklch(0.96 0.01 85);
   --primary: oklch(0.65 0.2 15);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.55 0.1 195);
+  --secondary: oklch(0.58 0.14 260);
   --secondary-foreground: oklch(1 0 0);
   --muted: oklch(0.2 0.01 285);
   --muted-foreground: oklch(0.6 0.01 285);
@@ -124,7 +124,7 @@
   --input: oklch(0.25 0.02 285);
   --ring: oklch(0.65 0.2 15);
   --chart-1: oklch(0.65 0.2 15);
-  --chart-2: oklch(0.55 0.1 195);
+  --chart-2: oklch(0.58 0.14 260);
   --chart-3: oklch(0.5 0.15 265);
   --chart-4: oklch(0.7 0.18 85);
   --chart-5: oklch(0.65 0.2 15);
@@ -253,7 +253,7 @@ textarea {
 
 /* Gradient text utility */
 .text-gradient {
-  background: linear-gradient(135deg, oklch(0.55 0.22 15), oklch(0.55 0.12 195));
+  background: linear-gradient(135deg, oklch(0.55 0.22 15), oklch(0.45 0.18 260));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
