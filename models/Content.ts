@@ -42,7 +42,7 @@ const baseOptions = {
 const contentSchema = new Schema<IBaseWork>({
   title: { type: String, required: true, index: true },
   slug: { type: String, index: true },
-  authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Author', required: true, index: true },
+  authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   content: { type: Schema.Types.Mixed, required: true },
   tags: [{ type: String }],
   description: { type: String },
