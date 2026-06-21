@@ -1,5 +1,6 @@
 "use client";
 import { useState } from 'react';
+import { motion } from 'motion/react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -36,9 +37,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-muted/30">
-      <div className="w-full max-w-sm">
-        <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-muted/50">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-sm"
+      >
+        <div className="bg-card border border-border rounded-2xl p-8">
           <div className="text-center mb-8">
             <div className="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center mx-auto mb-4">
               <PenLine className="w-5 h-5 text-white" />
@@ -49,35 +55,16 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">Email</label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <label htmlFor="email" className="text-sm font-medium text-foreground">Email</label>
+              <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
-
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">Password</label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="text-sm font-medium text-foreground">Password</label>
+                <Link href="/forgot-password" className="text-xs text-brand-600 hover:underline">Forgot?</Link>
+              </div>
+              <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
-
-            <div className="flex justify-end">
-              <Link href="/forgot-password" className="text-sm text-brand-600 hover:underline">
-                Forgot password?
-              </Link>
-            </div>
-
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Signing in…' : 'Sign in'}
             </Button>
@@ -85,7 +72,7 @@ export default function LoginPage() {
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+              <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
@@ -113,11 +100,9 @@ export default function LoginPage() {
 
         <p className="text-center text-sm text-muted-foreground mt-6">
           Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-brand-600 hover:underline font-medium">
-            Sign up
-          </Link>
+          <Link href="/register" className="text-brand-600 hover:underline font-medium">Sign up</Link>
         </p>
-      </div>
+      </motion.div>
       <Toaster />
     </div>
   );

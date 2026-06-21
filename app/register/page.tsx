@@ -1,5 +1,6 @@
 "use client";
 import { useState } from 'react';
+import { motion } from 'motion/react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -56,9 +57,14 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-muted/30">
-      <div className="w-full max-w-sm">
-        <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-muted/50">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-sm"
+      >
+        <div className="bg-card border border-border rounded-2xl p-8">
           <div className="text-center mb-8">
             <div className="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center mx-auto mb-4">
               <PenLine className="w-5 h-5 text-white" />
@@ -69,42 +75,17 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium">Name</label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
+              <label htmlFor="name" className="text-sm font-medium text-foreground">Name</label>
+              <Input id="name" type="text" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
-
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">Email</label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <label htmlFor="email" className="text-sm font-medium text-foreground">Email</label>
+              <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
-
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">Password</label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="At least 8 characters"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                minLength={8}
-                required
-              />
+              <label htmlFor="password" className="text-sm font-medium text-foreground">Password</label>
+              <Input id="password" type="password" placeholder="At least 8 characters" value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required />
             </div>
-
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Creating account…' : 'Create account'}
             </Button>
@@ -113,11 +94,9 @@ export default function RegisterPage() {
 
         <p className="text-center text-sm text-muted-foreground mt-6">
           Already have an account?{' '}
-          <Link href="/login" className="text-brand-600 hover:underline font-medium">
-            Sign in
-          </Link>
+          <Link href="/login" className="text-brand-600 hover:underline font-medium">Sign in</Link>
         </p>
-      </div>
+      </motion.div>
       <Toaster />
     </div>
   );

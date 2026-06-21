@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { MessageSquare, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useComments, useCreateComment, useDeleteComment } from '@/hooks/use-comments';
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import type { CommentItem } from '@/lib/api-types';
 
 function CommentCard({
@@ -23,14 +23,14 @@ function CommentCard({
   const isAuthor = session?.user?.email && comment.authorId?._id;
 
   return (
-    <div className="flex gap-3 py-3">
+    <div className="flex gap-3 py-4">
       <Avatar
         src={comment.authorId?.image}
         name={comment.authorId?.name}
         size="sm"
       />
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex items-center gap-2">
           <span className="text-sm font-medium">
             {comment.authorId?.name ?? 'Unknown'}
           </span>
@@ -41,8 +41,8 @@ function CommentCard({
             })}
           </span>
         </div>
-        <p className="text-sm text-foreground">{comment.text}</p>
-        <div className="flex items-center gap-2 mt-1">
+        <p className="text-sm text-foreground mt-0.5 leading-relaxed">{comment.text}</p>
+        <div className="flex items-center gap-2 mt-1.5">
           <button
             onClick={() => onReply(comment._id)}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -98,15 +98,17 @@ function CommentForm({
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={parentId ? 'Write a reply...' : 'Write a comment...'}
-        className="flex-1 h-9 rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex-1 h-9 bg-transparent border-b border-border text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors"
         maxLength={2000}
       />
       <Button
         type="submit"
         size="sm"
+        variant="ghost"
+        className="text-xs"
         disabled={!text.trim() || createComment.isLoading}
       >
-        {parentId ? 'Reply' : 'Comment'}
+        {parentId ? 'Reply' : 'Send'}
       </Button>
     </form>
   );
@@ -124,10 +126,10 @@ export default function CommentSection({ contentId }: { contentId: string }) {
     replies.filter((r) => r.parentId === parentId);
 
   return (
-    <div className="mt-8 pt-6 border-t">
+    <div className="mt-10 pt-8 border-t border-border">
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-4"
+        className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-6"
       >
         <MessageSquare className="w-4 h-4" />
         Comments ({comments?.length ?? 0})
@@ -140,7 +142,7 @@ export default function CommentSection({ contentId }: { contentId: string }) {
 
           {isLoading && (
             <div className="flex items-center justify-center py-8">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-foreground/30 border-t-foreground" />
             </div>
           )}
 
@@ -151,40 +153,60 @@ export default function CommentSection({ contentId }: { contentId: string }) {
           )}
 
           {!isLoading && !isError && comments?.length === 0 && (
-            <p className="text-sm text-muted-foreground py-4 text-center">
+            <p className="text-sm text-muted-foreground py-8 text-center">
               No comments yet. Be the first to share your thoughts!
             </p>
           )}
 
           {!isLoading && !isError && (
-            <div className={cn('divide-y', rootComments.length > 0 && 'mt-4')}>
-              {rootComments.map((comment) => (
-                <div key={comment._id}>
-                  <CommentCard
-                    comment={comment}
-                    contentId={contentId}
-                    onReply={(id) => setReplyToId(replyToId === id ? null : id)}
-                  />
-                  {getReplies(comment._id).map((reply) => (
-                    <div key={reply._id} className="ml-10 border-l-2 border-muted pl-4">
-                      <CommentCard
-                        comment={reply}
-                        contentId={contentId}
-                        onReply={() => {}}
-                      />
-                    </div>
-                  ))}
-                  {replyToId === comment._id && (
-                    <div className="ml-10 mb-3">
-                      <CommentForm
-                        contentId={contentId}
-                        parentId={comment._id}
-                        onDone={() => setReplyToId(null)}
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className={rootComments.length > 0 ? 'mt-4 divide-y divide-border' : ''}>
+              <AnimatePresence initial={false}>
+                {rootComments.map((comment, i) => (
+                  <motion.div
+                    key={comment._id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2, delay: i * 0.03 }}
+                  >
+                    <CommentCard
+                      comment={comment}
+                      contentId={contentId}
+                      onReply={(id) => setReplyToId(replyToId === id ? null : id)}
+                    />
+                    <AnimatePresence>
+                      {getReplies(comment._id).map((reply) => (
+                        <motion.div
+                          key={reply._id}
+                          initial={{ opacity: 0, x: -4 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="ml-10 border-l-2 border-muted pl-4"
+                        >
+                          <CommentCard
+                            comment={reply}
+                            contentId={contentId}
+                            onReply={() => {}}
+                          />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                    {replyToId === comment._id && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="ml-10 mb-3 overflow-hidden"
+                      >
+                        <CommentForm
+                          contentId={contentId}
+                          parentId={comment._id}
+                          onDone={() => setReplyToId(null)}
+                        />
+                      </motion.div>
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           )}
         </>
